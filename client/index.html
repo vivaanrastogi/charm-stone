@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Charm Stone Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-black text-white">
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+const API = 'YOUR_RENDER_BACKEND_URL';
+
+function App() {
+  const [token, setToken] = React.useState(localStorage.getItem('token'));
+  const [sales, setSales] = React.useState([]);
+  const [analytics, setAnalytics] = React.useState({});
+
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+
+  const [form, setForm] = React.useState({
+    item_name: '',
+    category: '',
+    amount: '',
+    payment_method: 'Cash',
+    notes: ''
+  });
+
+  async function login(e) {
+    e.preventDefault();
+
+    const res = await axios.post(`${API}/login`, {
+      username,
+      password
+    });
+
+    localStorage.setItem('token', res.data.token);
+    setToken(res.data.token);
+  }
+
+  async function fetchData() {
+    const salesRes = await axios.get(`${API}/sales`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const analyticsRes = await axios.get(`${API}/analytics`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    setSales(salesRes.data);
+    setAnalytics(analyticsRes.data);
+  }
+
+  React.useEffect(() => {
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
+
+  async function addSale(e) {
+    e.preventDefault();
+
+    await axios.post(`${API}/sales`, form, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
